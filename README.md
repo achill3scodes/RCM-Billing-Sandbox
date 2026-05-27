@@ -13,7 +13,7 @@ Interactive Revenue Cycle Management simulator for healthcare billing profession
 
 ## Live Demo
 
-https://yourusername.github.io/rcm-billing-sandbox/
+https://achill3scodes.github.io/rcm-billing-sandbox/
 
 ## Download
 
