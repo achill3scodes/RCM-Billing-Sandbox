@@ -1,0 +1,640 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>RCM Billing Sandbox</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+:root{--bg:#0f172a;--card:#1e293b;--card2:#263147;--border:#334155;--accent:#06b6d4;--accent2:#0ea5e9;--success:#10b981;--warn:#f59e0b;--danger:#ef4444;--purple:#a855f7;--orange:#f97316;--text:#f1f5f9;--sub:#94a3b8;--dim:#64748b}
+body{font-family:'Segoe UI',system-ui,sans-serif;background:var(--bg);color:var(--text);min-height:100vh;font-size:14px}
+.hdr{background:linear-gradient(135deg,#1e293b,#0f172a);border-bottom:1px solid var(--border);padding:14px 20px;display:flex;align-items:center;gap:14px}
+.hdr-icon{width:42px;height:42px;background:linear-gradient(135deg,var(--accent),var(--accent2));border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:20px;flex-shrink:0}
+.hdr h1{font-size:18px;font-weight:700}.hdr p{font-size:11px;color:var(--sub);margin-top:2px}
+.tabs{display:flex;background:var(--card);border-bottom:1px solid var(--border);padding:0 14px;overflow-x:auto;gap:2px}
+.tab{padding:11px 16px;font-size:13px;font-weight:500;color:var(--sub);cursor:pointer;border:none;background:none;border-bottom:2px solid transparent;white-space:nowrap;transition:all .2s}
+.tab:hover{color:var(--text)}.tab.active{color:var(--accent);border-bottom-color:var(--accent)}
+.panel{display:none;padding:18px}.panel.active{display:block}
+.card{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:15px;margin-bottom:0}
+.card-title{font-size:11px;font-weight:600;color:var(--sub);text-transform:uppercase;letter-spacing:.6px;margin-bottom:12px}
+.g2{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+.g3{display:grid;grid-template-columns:repeat(3,1fr);gap:14px}
+.g4{display:grid;grid-template-columns:repeat(4,1fr);gap:12px}
+.sec-title{font-size:15px;font-weight:600;margin-bottom:3px}
+.sec-sub{font-size:12px;color:var(--sub);margin-bottom:14px}
+.divider{height:1px;background:var(--border);margin:14px 0}
+/* Sliders */
+.srow{display:flex;align-items:center;gap:10px;margin-bottom:13px}
+.slabel{font-size:12px;color:var(--sub);min-width:155px;flex-shrink:0;line-height:1.4}
+.slabel span{display:block;font-size:10px;color:var(--dim);margin-top:1px}
+input[type=range]{flex:1;height:4px;-webkit-appearance:none;background:var(--border);border-radius:2px;outline:none}
+input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:15px;height:15px;border-radius:50%;background:var(--accent);cursor:pointer;box-shadow:0 0 0 3px rgba(6,182,212,.2)}
+.sval{font-size:13px;font-weight:600;color:var(--accent);min-width:62px;text-align:right}
+/* Toggles */
+.tg{display:flex;background:var(--bg);border-radius:8px;padding:3px;gap:2px}
+.tbtn{flex:1;padding:6px 12px;font-size:12px;font-weight:500;border:none;border-radius:6px;background:transparent;color:var(--sub);cursor:pointer;transition:all .2s;white-space:nowrap}
+.tbtn:hover{color:var(--text)}.tbtn.active{background:var(--accent);color:#fff;font-weight:600}
+/* KPI */
+.kpi{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:14px;text-align:center}
+.kpi-lbl{font-size:11px;color:var(--sub);text-transform:uppercase;letter-spacing:.5px}
+.kpi-val{font-size:26px;font-weight:700;margin:5px 0}
+.kpi-bench{font-size:10px;color:var(--dim)}
+.kg{color:var(--success)}.ky{color:var(--warn)}.kr{color:var(--danger)}
+/* Journey */
+.flow{display:flex;align-items:stretch;overflow-x:auto;padding:6px 0 14px;gap:0}
+.sbox{flex-shrink:0;background:var(--card);border:1px solid var(--border);border-radius:10px;padding:11px 8px;width:100px;text-align:center;cursor:pointer;transition:all .2s;position:relative}
+.sbox:hover,.sbox.sel{border-color:var(--accent);background:var(--card2)}
+.sbox .sicon{font-size:20px;margin-bottom:5px}.sbox .snum{position:absolute;top:-7px;left:50%;transform:translateX(-50%);background:var(--accent);color:#fff;font-size:9px;font-weight:700;width:16px;height:16px;border-radius:50%;display:flex;align-items:center;justify-content:center}
+.sbox .sname{font-size:10px;font-weight:600;line-height:1.3}
+.sarrow{display:flex;align-items:center;color:var(--dim);font-size:16px;padding:0 3px;flex-shrink:0}
+.sdetail{background:var(--card2);border:1px solid var(--accent);border-radius:12px;padding:15px;margin-top:12px;animation:fi .2s ease}
+@keyframes fi{from{opacity:0;transform:translateY(-5px)}to{opacity:1;transform:translateY(0)}}
+.sdetail h3{font-size:14px;color:var(--accent);margin-bottom:7px}
+.sdetail p{font-size:12px;color:var(--sub);line-height:1.6}
+.tags{display:flex;flex-wrap:wrap;gap:5px;margin-top:8px}
+.tag{padding:2px 9px;border-radius:20px;font-size:10px;font-weight:600;background:rgba(6,182,212,.15);color:var(--accent)}
+.tag.w{background:rgba(245,158,11,.15);color:var(--warn)}.tag.d{background:rgba(239,68,68,.15);color:var(--danger)}.tag.g{background:rgba(16,185,129,.15);color:var(--success)}
+/* Denial toggles */
+.dtog{display:flex;align-items:center;gap:9px;padding:9px 11px;background:var(--bg);border-radius:8px;margin-bottom:7px;cursor:pointer;transition:background .2s}
+.dtog:hover{background:var(--card2)}
+.dtog input[type=checkbox]{width:15px;height:15px;accent-color:var(--danger);flex-shrink:0}
+.dcode{font-size:11px;font-weight:700;color:var(--danger);min-width:46px;flex-shrink:0}
+.ddesc{font-size:11px;color:var(--sub);flex:1}
+.drate{font-size:11px;font-weight:600;color:var(--warn);flex-shrink:0}
+/* Waterfall */
+.wf{display:flex;align-items:flex-end;gap:4px;height:150px;padding:4px 0}
+.wfc{flex:1;display:flex;flex-direction:column;align-items:center;gap:3px;min-width:36px}
+.wfb{width:100%;border-radius:5px 5px 0 0;transition:height .4s ease;min-height:3px}
+.wflbl{font-size:9px;color:var(--sub);text-align:center;line-height:1.2}
+.wfamt{font-size:10px;font-weight:600}
+/* AR aging */
+.abar{margin-bottom:9px}
+.abar-top{display:flex;justify-content:space-between;font-size:12px;margin-bottom:3px}
+.abar-track{height:9px;background:var(--border);border-radius:5px;overflow:hidden}
+.abar-fill{height:100%;border-radius:5px;transition:width .4s ease}
+/* Breakdown table */
+.btable{width:100%;border-collapse:collapse}
+.btable tr{border-bottom:1px solid var(--border)}
+.btable td{padding:8px 3px;font-size:12px}
+.btable td:last-child{text-align:right;font-weight:600}
+/* Glossary */
+.gsearch{width:100%;padding:9px 13px;background:var(--card);border:1px solid var(--border);border-radius:8px;color:var(--text);font-size:13px;outline:none;margin-bottom:12px}
+.gsearch:focus{border-color:var(--accent)}
+.gitem{padding:9px 0;border-bottom:1px solid var(--border)}
+.gitem h4{font-size:12px;color:var(--accent)}.gitem p{font-size:11px;color:var(--sub);margin-top:3px;line-height:1.5}
+.badge{display:inline-block;padding:2px 7px;border-radius:20px;font-size:9px;font-weight:700}
+@media(max-width:680px){.g2,.g3,.g4{grid-template-columns:1fr}.slabel{min-width:110px}}
+</style>
+</head>
+<body>
+<div class="hdr">
+  <div class="hdr-icon">🏥</div>
+  <div><h1>US Healthcare RCM Billing Sandbox</h1><p>Interactive educational tool · End-to-end Revenue Cycle Management</p></div>
+</div>
+<div class="tabs">
+  <button class="tab active" onclick="switchTab('journey')">🔄 Claim Journey</button>
+  <button class="tab" onclick="switchTab('calc')">💰 Reimbursement Calc</button>
+  <button class="tab" onclick="switchTab('denials')">❌ Denial Simulator</button>
+  <button class="tab" onclick="switchTab('kpi')">📊 KPI Dashboard</button>
+  <button class="tab" onclick="switchTab('glossary')">📚 Glossary</button>
+</div>
+
+<!-- JOURNEY -->
+<div id="panel-journey" class="panel active">
+  <div class="sec-title">End-to-End RCM Claim Journey</div>
+  <div class="sec-sub">Click any stage to explore details. Toggle claim type and payer to see workflow differences.</div>
+  <div style="display:flex;gap:12px;align-items:center;margin-bottom:14px;flex-wrap:wrap">
+    <span style="font-size:12px;color:var(--sub)">Claim Type:</span>
+    <div class="tg" style="width:230px"><button class="tbtn active" onclick="setClaimType('prof',this)">CMS-1500 Professional</button><button class="tbtn" onclick="setClaimType('inst',this)">UB-04 Institutional</button></div>
+    <span style="font-size:12px;color:var(--sub);margin-left:4px">Payer:</span>
+    <div class="tg" style="width:270px"><button class="tbtn active" onclick="setPayerType('commercial',this)">Commercial</button><button class="tbtn" onclick="setPayerType('medicare',this)">Medicare</button><button class="tbtn" onclick="setPayerType('medicaid',this)">Medicaid</button></div>
+  </div>
+  <div style="overflow-x:auto"><div class="flow" id="jflow"></div></div>
+  <div id="jdetail"></div>
+  <div class="divider"></div>
+  <div class="g3">
+    <div class="card"><div class="card-title">Key Documents</div><div id="jdocs" style="font-size:11px;color:var(--sub);line-height:2.1"></div></div>
+    <div class="card"><div class="card-title">Common Pitfalls</div><div id="jpitfalls" style="font-size:11px;color:var(--sub);line-height:2.1"></div></div>
+    <div class="card"><div class="card-title">Timelines & Deadlines</div><div id="jtimes" style="font-size:11px;color:var(--sub);line-height:2.1"></div></div>
+  </div>
+</div>
+
+<!-- CALC -->
+<div id="panel-calc" class="panel">
+  <div class="sec-title">Claim Reimbursement Calculator</div>
+  <div class="sec-sub">Simulate payer adjudication — adjust variables and watch the payment waterfall update live.</div>
+  <div class="g2">
+    <div>
+      <div class="card" style="margin-bottom:14px">
+        <div class="card-title">Insurance Type</div>
+        <div class="tg"><button class="tbtn active" onclick="setInsType('commercial',this)">Commercial</button><button class="tbtn" onclick="setInsType('medicare',this)">Medicare</button><button class="tbtn" onclick="setInsType('medicaid',this)">Medicaid</button></div>
+        <div id="ins-note" style="margin-top:10px;font-size:11px;color:var(--sub);line-height:1.6"></div>
+      </div>
+      <div class="card">
+        <div class="card-title">Claim Variables</div>
+        <div class="srow"><div class="slabel">Billed Amount<span>Provider's full charge</span></div><input type="range" id="sl-billed" min="100" max="10000" step="50" value="2500" oninput="updateCalc()"><div class="sval" id="sv-billed">$2,500</div></div>
+        <div class="srow"><div class="slabel">Allowed Amount %<span>% of billed payer allows</span></div><input type="range" id="sl-allowed" min="20" max="100" step="1" value="65" oninput="updateCalc()"><div class="sval" id="sv-allowed">65%</div></div>
+        <div class="srow"><div class="slabel">Deductible Remaining<span>Patient's unmet deductible</span></div><input type="range" id="sl-deduct" min="0" max="5000" step="50" value="500" oninput="updateCalc()"><div class="sval" id="sv-deduct">$500</div></div>
+        <div class="srow"><div class="slabel">Co-insurance<span>Patient % after deductible</span></div><input type="range" id="sl-coins" min="0" max="40" step="1" value="20" oninput="updateCalc()"><div class="sval" id="sv-coins">20%</div></div>
+        <div class="srow"><div class="slabel">Co-pay<span>Fixed patient payment</span></div><input type="range" id="sl-copay" min="0" max="150" step="5" value="30" oninput="updateCalc()"><div class="sval" id="sv-copay">$30</div></div>
+        <div class="srow"><div class="slabel">Secondary Insurance<span>% of patient balance covered</span></div><input type="range" id="sl-sec" min="0" max="100" step="5" value="0" oninput="updateCalc()"><div class="sval" id="sv-sec">0%</div></div>
+      </div>
+    </div>
+    <div>
+      <div class="card" style="margin-bottom:14px">
+        <div class="card-title">Payment Waterfall</div>
+        <div class="wf" id="wf-chart"></div>
+      </div>
+      <div class="card">
+        <div class="card-title">Adjudication Breakdown</div>
+        <table class="btable" id="btable"></table>
+        <div class="divider"></div>
+        <div style="display:flex;justify-content:space-between;align-items:center">
+          <div style="font-size:12px;color:var(--sub)">Net Collection Rate<br><span style="font-size:10px;color:var(--dim)">Benchmark: ≥96%</span></div>
+          <div style="font-size:24px;font-weight:700" id="calc-ncr">—</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- DENIALS -->
+<div id="panel-denials" class="panel">
+  <div class="sec-title">Denial Management Simulator</div>
+  <div class="sec-sub">Toggle CARC denial codes on/off and adjust practice variables to simulate monthly revenue impact.</div>
+  <div class="g2">
+    <div>
+      <div class="card" style="margin-bottom:14px">
+        <div class="card-title">Practice Variables</div>
+        <div class="srow"><div class="slabel">Monthly Claim Volume<span>Total claims submitted</span></div><input type="range" id="sl-vol" min="100" max="5000" step="100" value="1000" oninput="updateDenials()"><div class="sval" id="sv-vol">1,000</div></div>
+        <div class="srow"><div class="slabel">Avg Claim Value<span>Average $ per claim</span></div><input type="range" id="sl-avgval" min="100" max="3000" step="50" value="450" oninput="updateDenials()"><div class="sval" id="sv-avgval">$450</div></div>
+        <div class="srow"><div class="slabel">Recovery Rate<span>% of denials successfully appealed</span></div><input type="range" id="sl-recovery" min="20" max="95" step="5" value="60" oninput="updateDenials()"><div class="sval" id="sv-recovery">60%</div></div>
+        <div class="srow"><div class="slabel">Avg Recovery Days<span>Days to collect after appeal</span></div><input type="range" id="sl-recdays" min="10" max="90" step="5" value="30" oninput="updateDenials()"><div class="sval" id="sv-recdays">30 days</div></div>
+      </div>
+      <div class="card">
+        <div class="card-title">Active Denial Reasons (CARC Codes)</div>
+        <div id="denial-list"></div>
+      </div>
+    </div>
+    <div>
+      <div class="g2" style="margin-bottom:14px">
+        <div class="kpi"><div class="kpi-lbl">Total Denials</div><div class="kpi-val kr" id="d-count">—</div><div class="kpi-bench">claims/month</div></div>
+        <div class="kpi"><div class="kpi-lbl">Revenue at Risk</div><div class="kpi-val ky" id="d-rev">—</div><div class="kpi-bench">monthly</div></div>
+        <div class="kpi"><div class="kpi-lbl">Denial Rate</div><div class="kpi-val" id="d-rate" style="color:var(--warn)">—</div><div class="kpi-bench">industry avg: 5–10%</div></div>
+        <div class="kpi"><div class="kpi-lbl">Unrecovered Loss</div><div class="kpi-val kr" id="d-loss">—</div><div class="kpi-bench">monthly write-off</div></div>
+      </div>
+      <div class="card" style="margin-bottom:14px">
+        <div class="card-title">Denial Category Breakdown</div>
+        <canvas id="denial-canvas" width="400" height="210"></canvas>
+      </div>
+      <div class="card">
+        <div class="card-title">Recovery Action Guide</div>
+        <div id="rec-guide" style="font-size:12px;color:var(--sub);line-height:1.9"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- KPI -->
+<div id="panel-kpi" class="panel">
+  <div class="sec-title">Practice KPI Dashboard</div>
+  <div class="sec-sub">Simulate your practice metrics. Color-coded against industry benchmarks.</div>
+  <div class="g4" style="margin-bottom:16px" id="kpi-cards"></div>
+  <div class="g2" style="margin-bottom:14px">
+    <div class="card">
+      <div class="card-title">AR Aging Simulation</div>
+      <div class="srow"><div class="slabel">Days in AR<span>Average collection cycle</span></div><input type="range" id="sl-dar" min="20" max="120" step="1" value="45" oninput="updateKPI()"><div class="sval" id="sv-dar">45</div></div>
+      <div id="aging-bars"></div>
+    </div>
+    <div class="card">
+      <div class="card-title">Payer Mix Simulator</div>
+      <div class="srow"><div class="slabel">Commercial %<span>Best reimbursement ~72%</span></div><input type="range" id="sl-comm" min="0" max="100" step="5" value="50" oninput="updatePayerMix()"><div class="sval" id="sv-comm">50%</div></div>
+      <div class="srow"><div class="slabel">Medicare %<span>~55% of billed</span></div><input type="range" id="sl-mc" min="0" max="100" step="5" value="30" oninput="updatePayerMix()"><div class="sval" id="sv-mc">30%</div></div>
+      <div class="srow"><div class="slabel">Medicaid %<span>~38% of billed</span></div><input type="range" id="sl-md" min="0" max="100" step="5" value="15" oninput="updatePayerMix()"><div class="sval" id="sv-md">15%</div></div>
+      <div class="srow"><div class="slabel">Self-Pay %<span>Hardest to collect ~25%</span></div><input type="range" id="sl-sp" min="0" max="100" step="5" value="5" oninput="updatePayerMix()"><div class="sval" id="sv-sp">5%</div></div>
+      <canvas id="pm-canvas" width="350" height="120"></canvas>
+      <div id="pm-result" style="margin-top:9px;font-size:12px;text-align:center"></div>
+    </div>
+  </div>
+  <div class="g3">
+    <div class="card">
+      <div class="card-title">Clean Claim Rate</div>
+      <div class="srow"><div class="slabel">CCR<span>First-pass clean %</span></div><input type="range" id="sl-ccr" min="50" max="99" step="1" value="85" oninput="updateKPI()"><div class="sval" id="sv-ccr">85%</div></div>
+      <div id="ccr-detail" style="font-size:11px;color:var(--sub);line-height:1.8"></div>
+    </div>
+    <div class="card">
+      <div class="card-title">Net Collection Rate</div>
+      <div class="srow"><div class="slabel">NCR<span>% of collectible collected</span></div><input type="range" id="sl-ncrk" min="60" max="100" step="1" value="92" oninput="updateKPI()"><div class="sval" id="sv-ncrk">92%</div></div>
+      <div id="ncr-detail" style="font-size:11px;color:var(--sub);line-height:1.8"></div>
+    </div>
+    <div class="card">
+      <div class="card-title">First Pass Resolution Rate</div>
+      <div class="srow"><div class="slabel">FPRR<span>Claims resolved on first touch</span></div><input type="range" id="sl-fprr" min="50" max="99" step="1" value="78" oninput="updateKPI()"><div class="sval" id="sv-fprr">78%</div></div>
+      <div id="fprr-detail" style="font-size:11px;color:var(--sub);line-height:1.8"></div>
+    </div>
+  </div>
+</div>
+
+<!-- GLOSSARY -->
+<div id="panel-glossary" class="panel">
+  <div class="sec-title">RCM Terminology Glossary</div>
+  <div class="sec-sub">45+ terms — search by name, code, or keyword.</div>
+  <input class="gsearch" type="text" placeholder="🔍  Search: EDI, DRG, modifier, adjudication..." oninput="filterGlossary(this.value)">
+  <div id="glist"></div>
+</div>
+
+<script>
+// ── DATA ──────────────────────────────────────────────────────────
+const stagesProf=[
+  {icon:'👤',name:'Patient Registration',detail:'Financial journey starts with accurate demographics capture: insurance IDs, guarantor, employer info, and consent forms. Errors here cascade through the entire claim.',tags:['Demographics','Insurance Card','Consent Forms'],pitfall:'Wrong DOB or name typos → eligibility failures',docs:'Intake form, Photo ID, Insurance card',time:'Before appointment'},
+  {icon:'✅',name:'Eligibility & Benefits',detail:'Real-time 270/271 EDI transaction verifies active coverage, deductible status, co-pay, co-insurance, in-network status, and benefit limits. Prevents surprise claim denials.',tags:['270/271 EDI','Real-time Verify','Network Status'],pitfall:'Not checking secondary insurance or benefit limits',docs:'270/271 Transaction, EOB history',time:'24–48 hrs before service'},
+  {icon:'📋',name:'Pre-Authorization',detail:'For procedures requiring PA, submit prior authorization to payer with clinical justification. Commercial and Medicare Advantage plans require auth for procedures, imaging, and specialist visits.',tags:['Prior Auth','NPI','Service Codes'],pitfall:'Missing auth → CO-4 / CO-15 denial',docs:'Auth request, Clinical notes',time:'3–10 business days before'},
+  {icon:'🩺',name:'Clinical Encounter',detail:'Provider documents the encounter: chief complaint, HPI, diagnosis, assessment, and plan. Documentation quality determines which codes can legitimately be billed.',tags:['SOAP Notes','HPI','MDM Level'],pitfall:'Upcoding, undercoding, missing DX linkage',docs:'Encounter notes, Orders',time:'Day of service'},
+  {icon:'🔢',name:'Medical Coding',detail:'Coders translate clinical documentation into ICD-10-CM diagnosis codes and CPT/HCPCS procedure codes with modifiers. CMS-1500 supports up to 4 CPTs and 12 diagnosis pointers per claim.',tags:['ICD-10-CM','CPT','HCPCS','Modifiers'],pitfall:'Unbundling, wrong POS, missing medical necessity',docs:'CMS-1500 Box 21–24, Superbill',time:'Within 24–48 hrs'},
+  {icon:'💵',name:'Charge Entry',detail:'Coded services entered into the PMS with charges, rendering NPI, date of service, place of service code, and unit count. Triggers claim generation.',tags:['Charge Capture','POS Code','RVUs'],pitfall:'Duplicate charges, wrong facility code',docs:'Charge ticket, Fee schedule',time:'Within 24 hrs of coding'},
+  {icon:'📤',name:'Claim Submission',detail:'Electronic claim transmitted via 837P EDI to payer through clearinghouse. Clearinghouse scrubs for format errors before forwarding. 999 acknowledgment confirms receipt.',tags:['837P EDI','Clearinghouse','ANSI X12','999 ACK'],pitfall:'Missing NPI, wrong taxonomy, clearinghouse rejection',docs:'837P Transaction, 999 ACK',time:'Submit within 1–5 days'},
+  {icon:'⚙️',name:'Payer Adjudication',detail:'Payer processes the claim against member contract, fee schedule, and medical policies. Applies deductible, co-insurance, and contracted rate. Can approve, partially pay, or deny.',tags:['Fee Schedule','Allowed Amount','LCD/NCD','RBRVS'],pitfall:'Contract discrepancies, bundling edits, medical necessity',docs:'EOB / 835 ERA',time:'14–30 days average'},
+  {icon:'💳',name:'Payment Posting',detail:'835 ERA or paper EOB matched to claims. Contractual adjustments posted, patient balances transferred, underpayments flagged for appeal. Secondary payer billed if applicable.',tags:['835 ERA','EOB','Adj Codes','Write-offs'],pitfall:'Posting to wrong patient, missing ERA matching',docs:'835 ERA, Payment log',time:'Within 24 hrs of receipt'},
+  {icon:'🔄',name:'AR Follow-Up',detail:'Unpaid/partially paid claims tracked in aging buckets (0–30, 31–60, 61–90, 90+ days). Billers call payers, resubmit corrected claims, and escalate disputes.',tags:['AR Aging','276/277 EDI','Ticklers'],pitfall:'Missing timely filing limits, calling without auth#',docs:'276/277 EDI, AR reports',time:'Every 14–30 days'},
+  {icon:'🧾',name:'Patient Billing',detail:'Remaining patient balance (deductible + co-ins + co-pay) billed via statement after insurance pays. Payment plans offered. Escalated to collections if unpaid.',tags:['Patient Statement','Payment Plan','Collections'],pitfall:'Sending balance before insurance adjudicates',docs:'Patient statement, Collection notice',time:'After insurance payment'}
+];
+const stagesInst=[
+  {icon:'👤',name:'Patient Registration',detail:'Hospital ADT system captures demographics, insurance, NOA (Notice of Admission for Medicare), admission type, and room assignment.',tags:['ADT System','NOA','Admission Type'],pitfall:'Missing secondary insurance, wrong admission type',docs:'UB-04 FL1–FL11, Face sheet',time:'At admission'},
+  {icon:'✅',name:'Eligibility & UM',detail:'270/271 eligibility check plus prior auth for inpatient stays. Case management coordinates Utilization Management (UM) and concurrent review for medical necessity.',tags:['270/271','UM Review','Concurrent Review'],pitfall:'Auth not extended for long stays → CO-197',docs:'Auth letters, UM notes',time:'Before / at admission'},
+  {icon:'🩺',name:'CDI & Documentation',detail:'CDI (Clinical Documentation Improvement) specialists query physicians throughout the stay to ensure diagnoses are documented with specificity needed for accurate DRG assignment.',tags:['CDI','Physician Query','CC/MCC Capture'],pitfall:'Vague diagnoses; undocumented complications',docs:'H&P, Progress notes, Op reports',time:'Continuous during stay'},
+  {icon:'🔢',name:'Facility Coding',detail:'Facility coders assign ICD-10-CM/PCS codes (up to 25 each). Principal diagnosis, POA indicators, and procedure codes drive DRG assignment and reimbursement.',tags:['ICD-10-PCS','DRG','Revenue Codes','POA'],pitfall:'Wrong principal Dx, missing POA, revenue code mismatch',docs:'UB-04 FL66–FL81',time:'At or after discharge'},
+  {icon:'💵',name:'Charge Capture (CDM)',detail:'Revenue codes (3-digit) capture all services via the Charge Description Master: 0300 lab, 0360 OR, 0450 ER, 0270 Med/Surg supply. CDM links services to HCPCS and rates.',tags:['Revenue Codes','CDM','HCPCS','Charge Lag'],pitfall:'Charge lag, missing charges, CDM mapping errors',docs:'UB-04 FL42–FL49, CDM',time:'During / after encounter'},
+  {icon:'📤',name:'Claim Submission',detail:'Institutional claim submitted via 837I EDI (UB-04 paper equivalent). Condition Codes (FL18–28) and Occurrence Codes (FL31–34) are specific to facility billing and must be accurate.',tags:['837I EDI','UB-04','Condition Codes','Bill Type FL04'],pitfall:'Missing occurrence codes, wrong bill type',docs:'837I Transaction, UB-04',time:'Post-discharge, within 5 days'},
+  {icon:'⚙️',name:'Payer Adjudication',detail:'Medicare reimburses inpatient via MS-DRG and outpatient via APC/OPPS. Commercial contracts use per diem, case rates, or % of charges. Cost outlier payments for high-cost cases.',tags:['MS-DRG','APC/OPPS','Outlier Payment','Per Diem'],pitfall:'Missing outlier claims, DRG optimization gaps',docs:'EOB / 835 ERA',time:'14–45 days average'},
+  {icon:'💳',name:'Payment Posting',detail:'DRG/APC payments and interim bills posted. Underpayment analysis critical for facility claims. RAC (Recovery Audit Contractor) audit exposure tracked.',tags:['835 ERA','DRG Reconciliation','RAC Audit'],pitfall:'Missing outlier payments, RAC exposure',docs:'835 ERA, Remittance advice',time:'Within 24 hrs of receipt'},
+  {icon:'🔄',name:'AR & Appeals',detail:'Facility AR tracked by bill type. Medical record requests responded to within 30 days. RAC audits and payer medical reviews require clinical defense and appeal preparation.',tags:['RAC Audit','ALJ Appeal','Medical Review','Payer Audit'],pitfall:'Missing appeal deadlines (120–180 days)',docs:'Appeal letters, Medical records',time:'Ongoing'},
+  {icon:'🧾',name:'Patient Billing',detail:'Hospital statement sent after insurance adjudicates. Financial counselors offer charity care screening, Medicaid eligibility assistance, and payment plans.',tags:['Hospital Bill','Charity Care','Financial Counseling'],pitfall:'HIPAA-compliant itemized bills required on request',docs:'UB-04, Patient statement',time:'After insurance adjudication'}
+];
+const payerDocs={
+  commercial:{docs:['CMS-1500 (02/12)','837P/837I EDI','Prior Auth letter','COB coordination form','Appeal with EOB'],pitfalls:['Auth not obtained → CO-15','Out-of-network → CO-97','COB not updated → duplicate','Modifier missing → CO-4','Wrong taxonomy → CO-16'],times:['Timely filing: 90–180 days','Level 1 appeal: 60–180 days','Level 2 appeal: 60 days','Late pay interest: after 30 days','Clean claim TAT: 14–30 days']},
+  medicare:{docs:['CMS-1500 / UB-04','ABN (Advance Beneficiary Notice)','MSP questionnaire','NCD/LCD documentation','PTAN/NPI active enrollment'],pitfalls:['ABN not signed → no patient liability','Missing LCD support → CO-50','Timely filing >1 year → CO-29','Wrong POS code → CO-6','Incident-to rules violated'],times:['Timely filing: 1 calendar year','Redetermination: 120 days','QIC Reconsideration: 180 days','ALJ Hearing: 60 days after QIC','MAC processing: 14–30 days']},
+  medicaid:{docs:['State-specific claim form','Prior auth documentation','Spend-down verification','MCO enrollment confirmation','Crossover claim routing'],pitfalls:['Prior auth expired → denial','Member eligibility lapsed → CO-27','Crossover claim routing error','Spend-down not met','State-specific edit failures'],times:['Timely filing: 90 days–1 year (by state)','Medicaid appeal: varies by state','Crossover billing: after Medicare RA','MMIS processing: 30–45 days','Managed Medicaid TAT: 21–30 days']}
+};
+const insNotes={
+  commercial:'Rates negotiated per contract — typically 65–120% of Medicare rates. Require timely filing within 90–180 days. Most use ANSI X12 837P/837I EDI.',
+  medicare:'RBRVS/RVU-based fee schedule for Part B; MS-DRG for Part A inpatient; APC/OPPS for outpatient. Medicare pays 80% of allowed after deductible. No prior auth for most Part B.',
+  medicaid:'State-specific rates — typically the lowest payer. ~40–60% of Medicare rates. Heavy prior auth requirements. Many states use Managed Medicaid (MCO) plans.'
+};
+const denials=[
+  {code:'CO-4',desc:'Procedure inconsistent with modifier',cat:'Coding',rate:.08},
+  {code:'CO-11',desc:'Diagnosis inconsistent with procedure',cat:'Coding',rate:.07},
+  {code:'CO-16',desc:'Claim lacks info for adjudication',cat:'Administrative',rate:.12},
+  {code:'CO-22',desc:'Coordination of Benefits issue',cat:'Eligibility',rate:.06},
+  {code:'CO-27',desc:'Coverage terminated at DOS',cat:'Eligibility',rate:.05},
+  {code:'CO-29',desc:'Timely filing limit exceeded',cat:'Timely Filing',rate:.09},
+  {code:'CO-50',desc:'Non-covered service per LCD/NCD',cat:'Clinical',rate:.10},
+  {code:'CO-97',desc:'Bundled into another service',cat:'Coding',rate:.07},
+  {code:'PR-1',desc:'Deductible — patient responsibility',cat:'Eligibility',rate:.06},
+  {code:'CO-15',desc:'Prior authorization not obtained',cat:'Administrative',rate:.11},
+  {code:'CO-167',desc:'Diagnosis not valid for claim type',cat:'Coding',rate:.05},
+  {code:'CO-B7',desc:'Provider not certified for procedure',cat:'Administrative',rate:.04}
+];
+const catClr={'Coding':'#06b6d4','Administrative':'#f59e0b','Eligibility':'#a855f7','Timely Filing':'#ef4444','Clinical':'#10b981'};
+const recGuides={
+  'Coding':'🔢 Coding — Coder education, modifier review, DX-procedure linkage audit, unbundling edits.',
+  'Administrative':'📋 Administrative — Eligibility verification workflow, auth tracking, claim scrubbing tools.',
+  'Eligibility':'✅ Eligibility — Real-time 270/271 at check-in, COB updates, retroactive Medicaid checks.',
+  'Timely Filing':'⏱ Timely Filing — Track submission dates, clearinghouse timestamps, escalate payer holds.',
+  'Clinical':'🩺 Clinical — Medical necessity documentation, LCD/NCD review, physician query process.'
+};
+const glossary=[
+  {t:'837P',d:'EDI transaction set for professional claims (CMS-1500 equivalent). Transmitted electronically via clearinghouse to payers.'},
+  {t:'837I',d:'EDI transaction set for institutional claims (UB-04 equivalent) from hospitals and facilities.'},
+  {t:'835 ERA',d:'Electronic Remittance Advice — EDI transaction payers send to explain how claims were adjudicated, adjusted, and paid.'},
+  {t:'270/271',d:'EDI transactions for eligibility inquiry (270) and response (271). Used to verify patient insurance benefits in real time.'},
+  {t:'276/277',d:'EDI transactions for claim status inquiry (276) and response (277). Used to track outstanding claims.'},
+  {t:'Adjudication',d:'The payer\'s process of reviewing and deciding how to pay a claim based on contract terms, member benefits, and medical policies.'},
+  {t:'Allowed Amount',d:'Maximum a payer will pay for a service per the provider contract. Anything above is a contractual adjustment.'},
+  {t:'ABN',d:'Advance Beneficiary Notice — Medicare form signed by the patient when a service may not be covered, transferring liability to the patient.'},
+  {t:'APC',d:'Ambulatory Payment Classification — Medicare\'s outpatient facility payment unit (OPPS). Similar to DRG but for outpatient procedures.'},
+  {t:'AR Aging',d:'Categorization of outstanding claims by how long unpaid: 0–30, 31–60, 61–90, 90+ days. Key metric for collections health.'},
+  {t:'CARC',d:'Claim Adjustment Reason Code — standard codes on ERA/EOB explaining why a claim was adjusted or denied (e.g., CO-4, PR-1).'},
+  {t:'CDI',d:'Clinical Documentation Improvement — program ensuring diagnoses are documented with specificity for accurate DRG/HCC coding.'},
+  {t:'CDM',d:'Charge Description Master — facility\'s comprehensive list of services, revenue codes, HCPCS codes, and standard charges.'},
+  {t:'Clean Claim',d:'A claim submitted without errors that processes immediately without additional information. Benchmark: >95%.'},
+  {t:'CMS-1500',d:'Standard claim form used by physicians and non-institutional providers to bill Medicare, Medicaid, and commercial payers.'},
+  {t:'COB',d:'Coordination of Benefits — process determining which payer is primary vs. secondary when a patient has multiple plans.'},
+  {t:'Contractual Adjustment',d:'Difference between billed and allowed amount per contract. Written off; cannot be billed to the patient.'},
+  {t:'CPT',d:'Current Procedural Terminology — AMA-maintained code set describing medical, surgical, and diagnostic procedures on professional claims.'},
+  {t:'Days in AR',d:'Average days to collect after claim submission. Benchmark: <40 days. Higher values indicate collection bottlenecks.'},
+  {t:'Denial Rate',d:'Percentage of submitted claims denied by payers. Benchmark: <5%. Higher rates indicate coding or process issues.'},
+  {t:'DRG',d:'Diagnosis-Related Group — Medicare\'s inpatient hospital payment classification. One fixed payment per admission based on principal diagnosis.'},
+  {t:'EOB',d:'Explanation of Benefits — document payers send to providers and patients explaining how a claim was processed and paid.'},
+  {t:'FPRR',d:'First Pass Resolution Rate — claims adjudicated on first submission without correction or appeal. Benchmark: >90%.'},
+  {t:'HCPCS',d:'Healthcare Common Procedure Coding System — Level I = CPT; Level II = alphanumeric codes for drugs, supplies, DME, ambulance.'},
+  {t:'ICD-10-CM',d:'Diagnosis code set required on all US medical claims. ~70,000 codes replacing ICD-9 since October 2015.'},
+  {t:'ICD-10-PCS',d:'Procedure Coding System used exclusively on facility UB-04 inpatient claims. ~87,000 codes.'},
+  {t:'LCD',d:'Local Coverage Determination — Medicare contractor policy specifying when a service is covered in a specific region.'},
+  {t:'Modifier',d:'Two-digit code appended to a CPT code for additional context: bilateral, multiple procedures, assistant surgeon, etc.'},
+  {t:'MS-DRG',d:'Medicare Severity-adjusted DRG — inpatient hospital payment unit. Higher-severity DRGs (with CCs/MCCs) pay more.'},
+  {t:'NCD',d:'National Coverage Determination — nationwide Medicare policy from CMS on whether an item or service is covered.'},
+  {t:'NCR',d:'Net Collection Rate — Payments ÷ (Charges − Contractual Adjustments). Measures collection efficiency. Benchmark: >96%.'},
+  {t:'NOA',d:'Notice of Admission — Medicare requires hospitals to notify beneficiaries\' supplemental insurers within 72 hrs of inpatient admission.'},
+  {t:'NPI',d:'National Provider Identifier — 10-digit unique provider ID required on all HIPAA-standard claims.'},
+  {t:'OPPS',d:'Outpatient Prospective Payment System — Medicare\'s payment system for hospital outpatient services, using APCs.'},
+  {t:'POS Code',d:'Place of Service code on CMS-1500: 11=Office, 21=Inpatient, 22=Outpatient, 23=ER, 31=SNF, 41=Ambulance-Land.'},
+  {t:'PR Code',d:'Patient Responsibility code on EOB/ERA — indicates amounts owed by the patient (deductible, co-ins, co-pay).'},
+  {t:'Prior Authorization',d:'Pre-approval from the insurer before rendering certain services. Required for procedures, imaging, and specialist visits.'},
+  {t:'RAC',d:'Recovery Audit Contractor — Medicare-hired auditors who identify and recover improper payments from providers.'},
+  {t:'RBRVS',d:'Resource-Based Relative Value Scale — Medicare\'s physician payment system: Work RVU + Practice Expense RVU + Malpractice RVU × GPCI × CF.'},
+  {t:'Revenue Codes',d:'3-digit codes on UB-04 identifying the type of service provided in a facility (0300=Lab, 0360=OR, 0450=ER).'},
+  {t:'RVU',d:'Relative Value Unit — basic measure in RBRVS. Total RVUs × GPCI × Conversion Factor = Medicare payment.'},
+  {t:'Timely Filing',d:'Deadline to submit a claim: Medicare = 1 year from DOS; commercial = typically 90–180 days. Missing it = CO-29 denial.'},
+  {t:'UB-04',d:'Uniform Billing form (CMS-1450) used by hospitals, SNFs, and other institutional providers to bill for facility services.'},
+  {t:'Underpayment',d:'When a payer remits less than the contracted allowed amount. Must be identified and appealed separately from contractual adjustments.'},
+  {t:'Write-off',d:'Amount removed from AR. Contractual write-offs are expected; bad debt write-offs represent unexpected revenue loss.'}
+];
+
+// ── STATE ──────────────────────────────────────────────────────────
+let claimType='prof', payerType='commercial', insType='commercial', selStage=null;
+let dChecked={};
+denials.forEach(d=>dChecked[d.code]=true);
+
+// ── TABS ──────────────────────────────────────────────────────────
+function switchTab(t){
+  document.querySelectorAll('.panel').forEach(p=>p.classList.remove('active'));
+  document.querySelectorAll('.tab').forEach(b=>b.classList.remove('active'));
+  document.getElementById('panel-'+t).classList.add('active');
+  const idx=['journey','calc','denials','kpi','glossary'].indexOf(t);
+  document.querySelectorAll('.tab')[idx].classList.add('active');
+  if(t==='calc')updateCalc();
+  if(t==='denials'){renderDenialList();updateDenials();}
+  if(t==='kpi'){updateKPI();updatePayerMix();}
+  if(t==='glossary')renderGlossary('');
+}
+
+// ── JOURNEY ──────────────────────────────────────────────────────
+function setClaimType(v,b){claimType=v;setActive(b);renderJourney();}
+function setPayerType(v,b){payerType=v;setActive(b);renderJourney();}
+function setActive(b){b.closest('.tg').querySelectorAll('.tbtn').forEach(x=>x.classList.remove('active'));b.classList.add('active');}
+
+function renderJourney(){
+  const stages=claimType==='prof'?stagesProf:stagesInst;
+  const flow=document.getElementById('jflow');
+  flow.innerHTML='';
+  stages.forEach((s,i)=>{
+    const box=document.createElement('div');
+    box.className='sbox'+(selStage===i?' sel':'');
+    box.innerHTML=`<div class="snum">${i+1}</div><div class="sicon">${s.icon}</div><div class="sname">${s.name}</div>`;
+    box.onclick=()=>{selStage=selStage===i?null:i;renderJourney();};
+    flow.appendChild(box);
+    if(i<stages.length-1){const a=document.createElement('div');a.className='sarrow';a.textContent='›';flow.appendChild(a);}
+  });
+  const db=document.getElementById('jdetail');
+  if(selStage!==null&&selStage<stages.length){
+    const s=stages[selStage];
+    db.innerHTML=`<div class="sdetail">
+      <h3>${s.icon} Stage ${selStage+1}: ${s.name}</h3>
+      <p>${s.detail}</p>
+      <div class="tags">${s.tags.map(t=>`<span class="tag">${t}</span>`).join('')}</div>
+      <div style="margin-top:10px;display:grid;grid-template-columns:1fr 1fr;gap:10px">
+        <div><div style="font-size:10px;color:var(--warn);font-weight:700;margin-bottom:3px">⚠️ Pitfall</div><div style="font-size:11px;color:var(--sub)">${s.pitfall}</div></div>
+        <div><div style="font-size:10px;color:var(--success);font-weight:700;margin-bottom:3px">📄 Documents</div><div style="font-size:11px;color:var(--sub)">${s.docs}</div></div>
+      </div>
+      <div style="margin-top:7px"><span class="badge" style="background:rgba(6,182,212,.15);color:var(--accent)">⏱ ${s.time}</span></div>
+    </div>`;
+  } else {
+    db.innerHTML='<div style="text-align:center;padding:10px;color:var(--dim);font-size:12px">👆 Click any stage above to see details</div>';
+  }
+  const p=payerDocs[payerType];
+  document.getElementById('jdocs').innerHTML=p.docs.map(d=>`<div>📄 ${d}</div>`).join('');
+  document.getElementById('jpitfalls').innerHTML=p.pitfalls.map(d=>`<div>⚠️ ${d}</div>`).join('');
+  document.getElementById('jtimes').innerHTML=p.times.map(d=>`<div>⏱ ${d}</div>`).join('');
+}
+
+// ── CALC ──────────────────────────────────────────────────────────
+function setInsType(v,b){insType=v;setActive(b);updateCalc();}
+
+function updateCalc(){
+  const billed=+document.getElementById('sl-billed').value;
+  const aPct=+document.getElementById('sl-allowed').value/100;
+  const deduct=+document.getElementById('sl-deduct').value;
+  const coinsPct=+document.getElementById('sl-coins').value/100;
+  const copay=+document.getElementById('sl-copay').value;
+  const secPct=+document.getElementById('sl-sec').value/100;
+
+  document.getElementById('sv-billed').textContent='$'+billed.toLocaleString();
+  document.getElementById('sv-allowed').textContent=document.getElementById('sl-allowed').value+'%';
+  document.getElementById('sv-deduct').textContent='$'+deduct.toLocaleString();
+  document.getElementById('sv-coins').textContent=document.getElementById('sl-coins').value+'%';
+  document.getElementById('sv-copay').textContent='$'+copay;
+  document.getElementById('sv-sec').textContent=document.getElementById('sl-sec').value+'%';
+  document.getElementById('ins-note').textContent=insNotes[insType];
+
+  const allowed=billed*aPct;
+  const cAdj=billed-allowed;
+  const dedApplied=Math.min(deduct,allowed);
+  const afterDed=allowed-dedApplied;
+  const coinAmt=afterDed*coinsPct;
+  const patResp=dedApplied+coinAmt+copay;
+  const primPay=Math.max(0,allowed-dedApplied-coinAmt-copay);
+  const secPay=patResp*secPct;
+  const finalPat=Math.max(0,patResp-secPay);
+  const ncr=billed>0?(primPay+secPay+finalPat)/(allowed)*100:0;
+
+  const wf=document.getElementById('wf-chart');
+  const items=[
+    {l:'Billed',v:billed,c:'#475569'},
+    {l:'Contractual Adj',v:cAdj,c:'#ef4444'},
+    {l:'Allowed',v:allowed,c:'#06b6d4'},
+    {l:'Deductible',v:dedApplied,c:'#f59e0b'},
+    {l:'Co-ins',v:coinAmt,c:'#a855f7'},
+    {l:'Co-pay',v:copay,c:'#f97316'},
+    {l:'Ins Pays',v:primPay,c:'#10b981'},
+    {l:'Secondary',v:secPay,c:'#3b82f6'},
+    {l:'Pt Owes',v:finalPat,c:'#ef4444'}
+  ];
+  wf.innerHTML=items.map(it=>{
+    const h=Math.max(3,it.v/billed*130);
+    return`<div class="wfc"><div class="wfamt" style="color:${it.c}">$${Math.round(it.v)}</div><div class="wfb" style="height:${h}px;background:${it.c};opacity:.82"></div><div class="wflbl">${it.l}</div></div>`;
+  }).join('');
+
+  const rows=[
+    ['Billed Amount','$'+billed.toLocaleString(),'#f1f5f9'],
+    ['− Contractual Adjustment','-$'+cAdj.toFixed(2),'#ef4444'],
+    ['= Allowed Amount','$'+allowed.toFixed(2),'#06b6d4'],
+    ['− Patient Deductible','-$'+dedApplied.toFixed(2),'#f59e0b'],
+    ['− Patient Co-insurance','-$'+coinAmt.toFixed(2),'#a855f7'],
+    ['− Patient Co-pay','-$'+copay.toFixed(2),'#f97316'],
+    ['= Primary Ins. Pays','$'+primPay.toFixed(2),'#10b981'],
+    ['Secondary Ins. Pays','$'+secPay.toFixed(2),'#3b82f6'],
+    ['Patient Responsibility','$'+finalPat.toFixed(2),'#ef4444'],
+  ];
+  document.getElementById('btable').innerHTML=rows.map(([l,v,c])=>`<tr><td style="color:var(--sub)">${l}</td><td style="color:${c}">${v}</td></tr>`).join('');
+
+  const nEl=document.getElementById('calc-ncr');
+  nEl.textContent=ncr.toFixed(1)+'%';
+  nEl.className=ncr>=96?'kg':ncr>=88?'ky':'kr';
+  nEl.style.fontSize='24px';nEl.style.fontWeight='700';
+}
+
+// ── DENIALS ──────────────────────────────────────────────────────
+function renderDenialList(){
+  document.getElementById('denial-list').innerHTML=denials.map(d=>`
+    <label class="dtog">
+      <input type="checkbox" ${dChecked[d.code]?'checked':''} onchange="dChecked['${d.code}']=this.checked;updateDenials()">
+      <span class="dcode">${d.code}</span>
+      <span class="ddesc">${d.desc}</span>
+      <span class="drate">${(d.rate*100).toFixed(0)}%</span>
+      <span class="badge" style="background:${catClr[d.cat]}22;color:${catClr[d.cat]};font-size:9px;padding:1px 6px">${d.cat}</span>
+    </label>`).join('');
+}
+
+function updateDenials(){
+  const vol=+document.getElementById('sl-vol').value;
+  const avg=+document.getElementById('sl-avgval').value;
+  const rec=+document.getElementById('sl-recovery').value/100;
+  const rd=+document.getElementById('sl-recdays').value;
+  document.getElementById('sv-vol').textContent=vol.toLocaleString();
+  document.getElementById('sv-avgval').textContent='$'+avg;
+  document.getElementById('sv-recovery').textContent=document.getElementById('sl-recovery').value+'%';
+  document.getElementById('sv-recdays').textContent=rd+' days';
+
+  const active=denials.filter(d=>dChecked[d.code]);
+  const totRate=active.reduce((s,d)=>s+d.rate,0);
+  const denied=Math.round(vol*totRate);
+  const rev=denied*avg;
+  const loss=rev*(1-rec);
+
+  document.getElementById('d-count').textContent=denied.toLocaleString();
+  document.getElementById('d-rev').textContent='$'+rev.toLocaleString();
+  const dr=document.getElementById('d-rate');
+  dr.textContent=(totRate*100).toFixed(1)+'%';
+  dr.className='kpi-val '+(totRate<.05?'kg':totRate<.10?'ky':'kr');
+  document.getElementById('d-loss').textContent='$'+Math.round(loss).toLocaleString();
+
+  // Donut
+  const cvs=document.getElementById('denial-canvas');
+  const ctx=cvs.getContext('2d');
+  ctx.clearRect(0,0,cvs.width,cvs.height);
+  const catT={};
+  active.forEach(d=>{catT[d.cat]=(catT[d.cat]||0)+d.rate;});
+  const cats=Object.entries(catT);
+  const tot=cats.reduce((s,[,v])=>s+v,0);
+  if(!tot){ctx.fillStyle='#64748b';ctx.font='13px Segoe UI';ctx.textAlign='center';ctx.fillText('No active denials',200,105);return;}
+  const cx=100,cy=cvs.height/2,r=78,inn=48;
+  let ang=-Math.PI/2;
+  cats.forEach(([cat,val])=>{
+    const sl=(val/tot)*2*Math.PI;
+    ctx.beginPath();ctx.moveTo(cx,cy);ctx.arc(cx,cy,r,ang,ang+sl);ctx.closePath();
+    ctx.fillStyle=catClr[cat]||'#888';ctx.fill();
+    ang+=sl;
+  });
+  ctx.beginPath();ctx.arc(cx,cy,inn,0,2*Math.PI);ctx.fillStyle='#1e293b';ctx.fill();
+  ctx.fillStyle='#f1f5f9';ctx.font='bold 15px Segoe UI';ctx.textAlign='center';
+  ctx.fillText((totRate*100).toFixed(1)+'%',cx,cy+4);
+  ctx.fillStyle='#94a3b8';ctx.font='10px Segoe UI';ctx.fillText('denial rate',cx,cy+18);
+  let ly=22;
+  cats.forEach(([cat])=>{
+    ctx.fillStyle=catClr[cat];ctx.fillRect(220,ly-9,11,11);
+    ctx.fillStyle='#94a3b8';ctx.font='11px Segoe UI';ctx.textAlign='left';
+    ctx.fillText(cat,235,ly);ly+=22;
+  });
+  const guide=Object.keys(catT).map(c=>recGuides[c]).filter(Boolean);
+  document.getElementById('rec-guide').innerHTML=guide.join('<br>')||'<span style="color:var(--dim)">No active denials</span>';
+}
+
+// ── KPI ──────────────────────────────────────────────────────────
+function updateKPI(){
+  const dar=+document.getElementById('sl-dar').value;
+  const ccr=+document.getElementById('sl-ccr').value;
+  const ncrK=+document.getElementById('sl-ncrk').value;
+  const fprr=+document.getElementById('sl-fprr').value;
+  document.getElementById('sv-dar').textContent=dar;
+  document.getElementById('sv-ccr').textContent=ccr+'%';
+  document.getElementById('sv-ncrk').textContent=ncrK+'%';
+  document.getElementById('sv-fprr').textContent=fprr+'%';
+
+  const kpis=[
+    {l:'Days in AR',v:dar,u:'d',g:40,y:60,lb:true,b:'Benchmark <40 days'},
+    {l:'Clean Claim Rate',v:ccr,u:'%',g:95,y:85,lb:false,b:'Benchmark >95%'},
+    {l:'Net Collection Rate',v:ncrK,u:'%',g:96,y:88,lb:false,b:'Benchmark >96%'},
+    {l:'First Pass Res. Rate',v:fprr,u:'%',g:90,y:80,lb:false,b:'Benchmark >90%'},
+  ];
+  document.getElementById('kpi-cards').innerHTML=kpis.map(k=>{
+    let cls;
+    if(k.lb) cls=k.v<=k.g?'kg':k.v<=k.y?'ky':'kr';
+    else cls=k.v>=k.g?'kg':k.v>=k.y?'ky':'kr';
+    const status=cls==='kg'?'✅ On Track':cls==='ky'?'⚠️ Caution':'🔴 Action Needed';
+    const sc=cls==='kg'?'var(--success)':cls==='ky'?'var(--warn)':'var(--danger)';
+    return`<div class="kpi"><div class="kpi-lbl">${k.l}</div><div class="kpi-val ${cls}">${k.v}${k.u}</div><div class="kpi-bench">${k.b}</div><div style="font-size:10px;margin-top:4px;color:${sc}">${status}</div></div>`;
+  }).join('');
+
+  // AR aging
+  const a0=Math.max(30,80-dar*.6), a1=Math.min(35,10+dar*.22), a2=Math.min(20,4+dar*.1), a3=Math.max(0,100-a0-a1-a2);
+  const ab=[{l:'0–30 days',p:a0,c:'#10b981'},{l:'31–60 days',p:a1,c:'#f59e0b'},{l:'61–90 days',p:a2,c:'#f97316'},{l:'90+ days',p:a3,c:'#ef4444'}];
+  document.getElementById('aging-bars').innerHTML=ab.map(b=>`
+    <div class="abar"><div class="abar-top"><span style="color:var(--sub)">${b.l}</span><span style="color:${b.c};font-weight:600">${Math.round(b.p)}%</span></div>
+    <div class="abar-track"><div class="abar-fill" style="width:${Math.round(b.p)}%;background:${b.c}"></div></div></div>`).join('');
+
+  // CCR
+  const rework=Math.round(1000*(1-ccr/100));
+  document.getElementById('ccr-detail').innerHTML=`1,000 claims/mo with ${ccr}% CCR:<br>≈ <strong style="color:var(--warn)">${rework}</strong> claims need rework<br>Est. rework cost: <strong style="color:var(--danger)">$${(rework*8).toLocaleString()}</strong>/mo @ $8/claim`;
+  // NCR
+  const coll=325000*ncrK/100, leak=325000-coll;
+  document.getElementById('ncr-detail').innerHTML=`On $500K charges (65% allowed = $325K):<br>Collected: <strong style="color:var(--success)">$${Math.round(coll).toLocaleString()}</strong><br>Revenue leakage: <strong style="color:var(--danger)">$${Math.round(leak).toLocaleString()}</strong>`;
+  // FPRR
+  const fprrMsg=fprr>=90?'✅ Excellent — minimal rework overhead':fprr>=80?'⚠️ Average — review top denial reasons':'🔴 Below average — audit coding accuracy';
+  document.getElementById('fprr-detail').innerHTML=`${fprrMsg}<br>Each 1% FPRR gain ≈ <strong style="color:var(--success)">$4,500/mo</strong> saved on 1,000 claims`;
+}
+
+function updatePayerMix(){
+  const comm=+document.getElementById('sl-comm').value;
+  const mc=+document.getElementById('sl-mc').value;
+  const md=+document.getElementById('sl-md').value;
+  const sp=+document.getElementById('sl-sp').value;
+  document.getElementById('sv-comm').textContent=comm+'%';
+  document.getElementById('sv-mc').textContent=mc+'%';
+  document.getElementById('sv-md').textContent=md+'%';
+  document.getElementById('sv-sp').textContent=sp+'%';
+  const tot=comm+mc+md+sp||1;
+  const n={comm:comm/tot*100,mc:mc/tot*100,md:md/tot*100,sp:sp/tot*100};
+  const wtd=(n.comm*.72+n.mc*.55+n.md*.38+n.sp*.25)/100;
+  const cvs=document.getElementById('pm-canvas');
+  const ctx=cvs.getContext('2d');
+  ctx.clearRect(0,0,cvs.width,cvs.height);
+  const colors=['#06b6d4','#10b981','#a855f7','#f59e0b'];
+  const vals=[n.comm,n.mc,n.md,n.sp];
+  const lbls=['Commercial','Medicare','Medicaid','Self-Pay'];
+  const bw=cvs.width-30,bh=36,by=14;
+  let x=15;
+  vals.forEach((v,i)=>{
+    const w=v/100*bw;
+    ctx.fillStyle=colors[i];ctx.fillRect(x,by,w,bh);
+    if(w>28){ctx.fillStyle='#fff';ctx.font='bold 10px Segoe UI';ctx.textAlign='center';ctx.fillText(v.toFixed(0)+'%',x+w/2,by+22);}
+    x+=w;
+  });
+  let lx=15;
+  lbls.forEach((l,i)=>{
+    ctx.fillStyle=colors[i];ctx.fillRect(lx,64,9,9);
+    ctx.fillStyle='#94a3b8';ctx.font='10px Segoe UI';ctx.textAlign='left';ctx.fillText(l,lx+12,73);
+    lx+=82;
+  });
+  const pmR=document.getElementById('pm-result');
+  const col=wtd>=.65?'var(--success)':wtd>=.5?'var(--warn)':'var(--danger)';
+  pmR.innerHTML=`Weighted avg reimbursement: <strong style="color:${col}">${(wtd*100).toFixed(1)}% of billed</strong><br><span style="font-size:10px;color:var(--dim)">Higher commercial mix = stronger revenue position</span>`;
+}
+
+// ── GLOSSARY ──────────────────────────────────────────────────────
+function renderGlossary(q){
+  const f=glossary.filter(t=>!q||t.t.toLowerCase().includes(q.toLowerCase())||t.d.toLowerCase().includes(q.toLowerCase()));
+  document.getElementById('glist').innerHTML=f.length?f.map(t=>`<div class="gitem"><h4>${t.t}</h4><p>${t.d}</p></div>`).join(''):'<div style="color:var(--dim);padding:12px;text-align:center">No matching terms.</div>';
+}
+function filterGlossary(v){renderGlossary(v);}
+
+// ── INIT ──────────────────────────────────────────────────────────
+renderJourney();
+updateCalc();
+renderDenialList();
+updateDenials();
+updateKPI();
+updatePayerMix();
+renderGlossary('');
+</script>
+</body>
+</html>
